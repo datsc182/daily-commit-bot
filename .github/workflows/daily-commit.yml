@@ -3,7 +3,7 @@ name: Automated Daily Commit
 
 on:
   schedule:
-    - cron: '30 2 * * *'  # Runs daily at 02:30 UTC (change if needed)
+    - cron: '30 2 * * *'  # Runs daily at 02:30 UTC (change as needed)
   workflow_dispatch:  # Allows manual triggering
 
 jobs:
@@ -12,12 +12,26 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
+        with:
+          persist-credentials: true  # Ensure the token is available for pushing changes
 
-      - name: Add Daily Commit (23f3004212@ds.study.iitm.ac.in)
+      - name: Append daily update and commit changes (23f3004212@ds.study.iitm.ac.in)
         run: |
+          # Append a timestamp to daily-log.txt (or create it if it doesn't exist)
           echo "Daily update: $(date)" >> daily-log.txt
+          
+          # Set up Git configuration with your provided email
           git config --global user.name "GitHub Actions Bot"
           git config --global user.email "23f3004212@ds.study.iitm.ac.in"
+          
+          # Stage the changes
           git add daily-log.txt
-          git commit -m "Automated daily update: $(date)"
-          git push
+          
+          # Check if there are any staged changes
+          if ! git diff --cached --quiet; then
+            # Commit and push the changes if there are any
+            git commit -m "Automated daily update: $(date)"
+            git push
+          else
+            echo "No changes to commit."
+          fi
